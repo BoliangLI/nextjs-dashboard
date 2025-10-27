@@ -7,7 +7,22 @@ import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
  
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('数据库连接字符串未配置，请设置 POSTGRES_URL 或 DATABASE_URL 环境变量');
+}
+
+// SSL 配置：支持 require/prefer/allow/disable
+const sslMode = process.env.POSTGRES_SSL_MODE || 'prefer';
+const sslConfig = sslMode === 'disable' ? false : sslMode;
+
+const sql = postgres(connectionString, {
+  ssl: sslConfig as any,
+  max: 1, // seed 只需要一个连接
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 const FormSchema = z.object({
   id: z.string(),
@@ -65,7 +80,9 @@ export async function createInvoice(prevState: State, formData: FormData){
     };
   }
  
-  revalidatePath('/dashboard/invoices');
+  // 清除所有相关页面的缓存
+  revalidatePath('/dashboard/invoices', 'page');
+  revalidatePath('/dashboard', 'page');
   redirect('/dashboard/invoices');
 }
 
@@ -102,16 +119,29 @@ export async function updateInvoice(
       WHERE id = ${id}
     `;
   } catch (error) {
+    console.error('Update invoice error:', error);
     return { message: 'Database Error: Failed to Update Invoice.' };
   }
  
-  revalidatePath('/dashboard/invoices');
+  // 清除所有相关页面的缓存
+  revalidatePath('/dashboard/invoices', 'page'); // 清除发票列表页
+  revalidatePath('/dashboard', 'page'); // 清除仪表板首页
+  revalidatePath(`/dashboard/invoices/${id}/edit`, 'page'); // 清除编辑页（如果有人仍在查看）
+  
   redirect('/dashboard/invoices');
 }
 
 export async function deleteInvoice(id: string) {
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath('/dashboard/invoices');
+  try {
+    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    
+    // 清除所有相关页面的缓存
+    revalidatePath('/dashboard/invoices', 'page');
+    revalidatePath('/dashboard', 'page');
+  } catch (error) {
+    console.error('Delete invoice error:', error);
+    throw new Error('Failed to delete invoice.');
+  }
 }
 
 export async function authenticate(
