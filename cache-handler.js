@@ -12,7 +12,7 @@
  * }
  */
 
-const { multiTierCache } = require('./cache');
+const { threeTierCache } = require('./cache');
 const { debug, error: logError, info } = require('./cache/utils/logger');
 /**
  * 判断是否为 Fetch 缓存
@@ -66,7 +66,7 @@ class CustomCacheHandler {
       const cacheType = isFetchCache(options) ? 'fetch' : 'cache';
       debug(`获取缓存: ${key}, 类型: ${cacheType}`);
 
-      const result = await multiTierCache.get(key, cacheType);
+      const result = await threeTierCache.get(key, cacheType);
 
       if (!result?.value) {
         debug(`缓存未命中: ${key}`);
@@ -104,7 +104,7 @@ class CustomCacheHandler {
     try {
       if (data === null || data === undefined) {
         debug(`删除缓存: ${key}`);
-        await multiTierCache.delete(key);
+        await threeTierCache.delete(key);
         return;
       }
 
@@ -120,7 +120,7 @@ class CustomCacheHandler {
       // 转换缓存数据
       const valueToStore = this.transformValueForStorage(data, ctx);
 
-      await multiTierCache.set(key, valueToStore, cacheType);
+      await threeTierCache.set(key, valueToStore, cacheType);
 
       debug(`成功设置缓存: ${key}`);
     } catch (err) {

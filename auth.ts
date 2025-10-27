@@ -6,7 +6,22 @@ import type { User } from '@/app/lib/definitions';
 import bcrypt from 'bcrypt';
 import postgres from 'postgres';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('数据库连接字符串未配置，请设置 POSTGRES_URL 或 DATABASE_URL 环境变量');
+}
+
+// SSL 配置：支持 require/prefer/allow/disable
+const sslMode = process.env.POSTGRES_SSL_MODE || 'prefer';
+const sslConfig = sslMode === 'disable' ? false : sslMode;
+
+const sql = postgres(connectionString, {
+  ssl: sslConfig as any,
+  max: 1, // seed 只需要一个连接
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 async function getUser(email: string): Promise<User | undefined> {
   try {
@@ -25,9 +40,6 @@ export const { auth, signIn, signOut } = NextAuth({
       const parsedCredentials = z
         .object({ email: z.string().email(), password: z.string().min(6) })
         .safeParse(credentials);
-
-        console.log('parsedCredentials',parsedCredentials);
-
       if (parsedCredentials.success) {
         const { email, password } = parsedCredentials.data;
         const user = await getUser(email);
@@ -36,7 +48,6 @@ export const { auth, signIn, signOut } = NextAuth({
         const passwordsMatch = await bcrypt.compare(password, user.password);
  
         if (passwordsMatch) {
-          console.log('passwordsMatch',passwordsMatch);
           return user;
         }
       }
