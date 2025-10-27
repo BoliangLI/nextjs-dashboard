@@ -215,7 +215,7 @@ class CustomCacheHandler {
       default:
         return data;
     }
-
+    
     return result;
   }
 

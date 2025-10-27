@@ -50,17 +50,27 @@ function getOSSClient() {
 
 /**
  * 构建 OSS 对象键
+ * @param {string} key - 缓存键
+ * @param {('cache'|'fetch'|'composable')} extension - 缓存类型扩展名
+ * @returns {string} OSS 对象键路径
+ * 
+ * 路径规则：
+ * - cache: {prefix}/{buildId}/{key}.cache
+ * - fetch: {prefix}/__fetch/{buildId}/{key} (无扩展名)
+ * - composable: {prefix}/{buildId}/{key}.composable
  */
-function buildOSSKey(key, extension) {
+function buildOSSKey(key, extension = 'cache') {
   const { OSS_CACHE_PREFIX, NEXT_BUILD_ID } = process.env;
   const buildId = NEXT_BUILD_ID || 'default';
+  const prefix = OSS_CACHE_PREFIX || 'cache/';
   
-  return path.posix.join(
-    OSS_CACHE_PREFIX || 'cache/',
-    extension === 'fetch' ? '__fetch' : '',
-    buildId,
-    extension === 'fetch' ? key : `${key}.${extension}`,
-  );
+  // fetch 类型有特殊的目录结构，且不带扩展名
+  if (extension === 'fetch') {
+    return path.posix.join(prefix, '__fetch', buildId, key);
+  }
+  
+  // cache 和 composable 类型在同一目录，但有不同的扩展名
+  return path.posix.join(prefix, buildId, `${key}.${extension}`);
 }
 
 /**
@@ -71,13 +81,15 @@ const ossCache = {
 
   /**
    * 从 OSS 获取缓存
+   * @param {string} key - 缓存键
+   * @param {('cache'|'fetch'|'composable')} cacheType - 缓存类型
    */
   async get(key, cacheType = 'cache') {
     try {
       const client = getOSSClient();
       const ossKey = buildOSSKey(key, cacheType);
       
-      debug(`从 OSS 获取缓存: ${ossKey}`);
+      debug(`📥 从 OSS 获取 [${cacheType}] 缓存: ${ossKey}`);
       
       const result = await client.get(ossKey);
       
@@ -93,7 +105,7 @@ const ossCache = {
         ? new Date(result.res.headers['last-modified']).getTime()
         : Date.now();
 
-      debug(`成功从 OSS 获取缓存: ${ossKey}`);
+      debug(`✅ 成功从 OSS 获取 [${cacheType}] 缓存: ${ossKey}`);
       
       return {
         value: cacheData,
@@ -102,25 +114,28 @@ const ossCache = {
     } catch (err) {
       // 如果对象不存在，返回 null
       if (err.code === 'NoSuchKey' || err.status === 404) {
-        debug(`OSS 缓存不存在: ${key}`);
+        debug(`❌ OSS [${cacheType}] 缓存不存在: ${key}`);
         throw new IgnorableError('缓存不存在');
       }
       
       // 其他错误记录并抛出
-      logError(`从 OSS 获取缓存失败: ${key}`, err);
+      logError(`❌ 从 OSS 获取 [${cacheType}] 缓存失败: ${key}`, err);
       throw new RecoverableError(`获取缓存失败: ${err.message}`);
     }
   },
 
   /**
    * 设置 OSS 缓存
+   * @param {string} key - 缓存键
+   * @param {*} value - 缓存值
+   * @param {('cache'|'fetch'|'composable')} cacheType - 缓存类型
    */
   async set(key, value, cacheType = 'cache') {
     try {
       const client = getOSSClient();
       const ossKey = buildOSSKey(key, cacheType);
       
-      debug(`设置 OSS 缓存: ${ossKey}`);
+      debug(`💾 设置 OSS [${cacheType}] 缓存: ${ossKey}`);
       
       // 将值序列化为 JSON
       const content = JSON.stringify(value);
@@ -133,9 +148,9 @@ const ossCache = {
         },
       });
       
-      debug(`成功设置 OSS 缓存: ${ossKey}`);
+      debug(`✅ 成功设置 OSS [${cacheType}] 缓存: ${ossKey}, 大小: ${content.length} bytes`);
     } catch (err) {
-      logError(`设置 OSS 缓存失败: ${key}`, err);
+      logError(`❌ 设置 OSS [${cacheType}] 缓存失败: ${key}`, err);
       throw new RecoverableError(`设置缓存失败: ${err.message}`);
     }
   },

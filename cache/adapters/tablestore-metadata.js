@@ -75,7 +75,7 @@ function buildPrimaryKey(key) {
   const buildId = NEXT_BUILD_ID || 'default';
   
   return [
-    { cache_key: `${buildId}/${key}` },
+    { cache_id: `${buildId}/${key}` },
     { type: 'meta' }
   ];
 }
@@ -144,8 +144,8 @@ const tablestoreMetadata = {
         ),
         primaryKey: buildPrimaryKey(key),
         attributeColumns: [
-          { lastModified: metadata.lastModified || Date.now() },
-          { revalidatedAt: metadata.revalidatedAt || Date.now() },
+          { lastModified: Number(metadata.lastModified.toFixed(0)) || Number(Date.now().toFixed(0)) },
+          { revalidatedAt: Number(metadata.revalidatedAt.toFixed(0)) || Number(Date.now().toFixed(0)) },
           { deleted: metadata.deleted || false },
           { size: metadata.size || 0 },
         ],

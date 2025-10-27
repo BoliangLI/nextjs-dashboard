@@ -6,7 +6,7 @@ import { LatestInvoicesSkeleton, RevenueChartSkeleton, CardsSkeleton } from '@/a
 import CardWrapper from '@/app/ui/dashboard/cards';
 
 // 启用 ISR：每180秒（3分钟）重新验证页面
-export const revalidate = 180;
+export const revalidate = 30;
  
 export default async function Page() {
   return (
