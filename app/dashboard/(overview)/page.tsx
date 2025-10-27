@@ -4,6 +4,9 @@ import { lusitana } from '@/app/ui/fonts';
 import { Suspense } from 'react';
 import { LatestInvoicesSkeleton, RevenueChartSkeleton, CardsSkeleton } from '@/app/ui/skeletons';
 import CardWrapper from '@/app/ui/dashboard/cards';
+
+// 启用 ISR：每180秒（3分钟）重新验证页面
+export const revalidate = 180;
  
 export default async function Page() {
   return (

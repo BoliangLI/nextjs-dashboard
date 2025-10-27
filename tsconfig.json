@@ -37,7 +37,7 @@
     "app/lib/placeholder-data.ts",
     "scripts/seed.js",
     ".next/dev/types/**/*.ts"
-  ],
+, "cache-handler.js"  ],
   "exclude": [
     "node_modules"
   ]
