@@ -21,13 +21,11 @@
  * 3. Next.js 会自动使用这个缓存处理器
  */
 
-const multiTierCache = require('./adapters/multi-tier-cache');
 const threeTierCache = require('./adapters/multi-tier-with-metadata');
 const ossCache = require('./adapters/oss-cache');
 const { LRUCache } = require('./utils/lru');
 
 module.exports = {
-  multiTierCache,
   threeTierCache,
   ossCache,
   LRUCache,

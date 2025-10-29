@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   
   // 配置自定义缓存处理器（使用绝对路径）
   cacheHandler: require.resolve( './cache-handler.js'),

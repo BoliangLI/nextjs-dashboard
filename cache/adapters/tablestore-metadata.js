@@ -107,11 +107,10 @@ const tablestoreMetadata = {
         debug(`TableStore 元数据不存在: ${key}`);
         return null;
       }
-
       // 解析属性
       const attrs = {};
-      result.row.attributes.forEach(([name, value]) => {
-        attrs[name] = value;
+      result.row.attributes.forEach(({columnName,columnValue}) => {
+        attrs[columnName] = columnValue;
       });
 
       debug(`TableStore 元数据命中: ${key}`, attrs);

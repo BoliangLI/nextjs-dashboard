@@ -78,7 +78,7 @@ const multiTierCacheWithMetadata = {
         };
       }
       
-      debug(`⏰ [L1 EXPIRED] 内存缓存已过期: ${key}, age: ${age}ms`);
+      logError(`⏰ [L1 EXPIRED] 内存缓存已过期: ${key}, age: ${age}ms`);
 
       // ========================================
       // 第二层：表格存储元数据验证（如果配置）

@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import postgres from 'postgres';
-import { revalidatePath } from 'next/cache';
+import { cacheLife, cacheTag, revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
@@ -81,8 +81,8 @@ export async function createInvoice(prevState: State, formData: FormData){
   }
  
   // 清除所有相关页面的缓存
-  revalidatePath('/dashboard/invoices', 'page');
-  revalidatePath('/dashboard', 'page');
+  revalidatePath('/dashboard/invoices');
+  revalidatePath('/dashboard');
   redirect('/dashboard/invoices');
 }
 
@@ -124,9 +124,10 @@ export async function updateInvoice(
   }
  
   // 清除所有相关页面的缓存
-  revalidatePath('/dashboard/invoices', 'page'); // 清除发票列表页
-  revalidatePath('/dashboard', 'page'); // 清除仪表板首页
-  revalidatePath(`/dashboard/invoices/${id}/edit`, 'page'); // 清除编辑页（如果有人仍在查看）
+  // revalidateTag('invoices', 'max');
+  revalidatePath('/dashboard/invoices'); // 清除发票列表页
+  revalidatePath('/dashboard'); // 清除仪表板首页
+  revalidatePath(`/dashboard/invoices/${id}/edit`); // 清除编辑页
   
   redirect('/dashboard/invoices');
 }
@@ -136,8 +137,8 @@ export async function deleteInvoice(id: string) {
     await sql`DELETE FROM invoices WHERE id = ${id}`;
     
     // 清除所有相关页面的缓存
-    revalidatePath('/dashboard/invoices', 'page');
-    revalidatePath('/dashboard', 'page');
+    revalidatePath('/dashboard/invoices');
+    revalidatePath('/dashboard');
   } catch (error) {
     console.error('Delete invoice error:', error);
     throw new Error('Failed to delete invoice.');
@@ -161,4 +162,23 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+export async function getCurrentTime() {
+    'use cache';
+    // cacheLife('minutes');
+    // cacheTag('currentTime');
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    console.log(`执行了getCurrentTime函数，时间戳为: ${year}-${month}-${day} ${hours}:${minutes}:${seconds}`);
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+export async function updateCurrentTime() {
+    revalidatePath('/dashboard/time');
 }

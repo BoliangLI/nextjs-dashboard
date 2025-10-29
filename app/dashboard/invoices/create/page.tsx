@@ -1,10 +1,14 @@
 import Form from '@/app/ui/invoices/create-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
 import { fetchCustomers } from '@/app/lib/data';
- 
-export default async function Page() {
+import { Suspense } from 'react';
+
+async function CreateInvoiceForm() {
   const customers = await fetchCustomers();
+  return <Form customers={customers} />;
+}
  
+export default function Page() {
   return (
     <main>
       <Breadcrumbs
@@ -17,7 +21,9 @@ export default async function Page() {
           },
         ]}
       />
-      <Form customers={customers} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <CreateInvoiceForm />
+      </Suspense>
     </main>
   );
 }

@@ -64,7 +64,7 @@ class CustomCacheHandler {
   async get(key, options) {
     try {
       const cacheType = isFetchCache(options) ? 'fetch' : 'cache';
-      debug(`获取缓存: ${key}, 类型: ${cacheType}`);
+      // debug(`获取缓存: ${key}, 类型: ${cacheType}`);
 
       const result = await threeTierCache.get(key, cacheType);
 
@@ -102,6 +102,7 @@ class CustomCacheHandler {
    */
   async set(key, data, ctx) {
     try {
+      logError('触发了缓存set', key, ctx);
       if (data === null || data === undefined) {
         debug(`删除缓存: ${key}`);
         await threeTierCache.delete(key);
@@ -114,7 +115,7 @@ class CustomCacheHandler {
 
       debug(`设置缓存: ${key}, 类型: ${cacheType}`, {
         kind: data?.kind,
-        revalidate: ctx?.revalidate,
+        revalidate: ctx?.cacheControl?.revalidate,
       });
 
       // 转换缓存数据
@@ -146,6 +147,19 @@ class CustomCacheHandler {
     }
   }
 
+  async revalidatePath(path) {
+    try {
+      info(`重新验证路径: ${path}`);
+      // 在完整实现中，这里应该：
+      // 1. 查找所有与该路径关联的缓存键
+      // 2. 删除或标记这些缓存为失效
+      // 由于我们的简化实现没有维护 path-to-key 映射，这里只是记录日志
+      debug(`路径重新验证（简化实现）: ${path}`);
+    } catch (err) {
+
+    }
+  }
+
   /**
    * 转换缓存值用于存储
    */
@@ -153,7 +167,7 @@ class CustomCacheHandler {
     if (!data) return data;
 
     const result = {
-      revalidate: ctx?.revalidate,
+      revalidate: ctx?.cacheControl?.revalidate,
     };
 
     switch (data.kind) {
@@ -226,7 +240,6 @@ class CustomCacheHandler {
     if (!cacheData) return null;
 
     const meta = cacheData.meta;
-
     switch (cacheData.type) {
       case 'route':
         return {
@@ -273,7 +286,7 @@ class CustomCacheHandler {
    * 重置缓存（用于开发模式）
    */
   async resetRequestCache() {
-    debug('重置请求缓存');
+    // debug('重置请求缓存');
   }
 }
 

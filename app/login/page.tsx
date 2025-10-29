@@ -11,7 +11,7 @@ export default function LoginPage() {
             <AcmeLogo />
           </div>
         </div>
-        <Suspense>
+        <Suspense fallback={<div>Loading...</div>}>
           <LoginForm />
         </Suspense>
       </div>
