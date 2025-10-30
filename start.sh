@@ -47,7 +47,30 @@ echo ""
 # 1. 安装依赖
 echo "📦 步骤 1/3: 安装依赖..."
 echo "======================================"
-pnpm install
+
+# 清理 pnpm 缓存以释放空间
+echo "🧹 清理 pnpm 缓存..."
+pnpm store prune || true
+
+# 显示磁盘空间信息
+echo "💾 当前磁盘空间："
+df -h /code 2>/dev/null || df -h . || true
+echo ""
+
+# 设置 pnpm store 目录到 /tmp（通常有更多空间）
+export PNPM_HOME="/tmp/.pnpm"
+export PNPM_STORE_DIR="/tmp/.pnpm-store"
+
+# 创建目录
+mkdir -p "$PNPM_HOME" "$PNPM_STORE_DIR" 2>/dev/null || true
+
+# 安装依赖（使用优化参数）
+pnpm install \
+  --force \
+  --no-optional \
+  --prefer-offline \
+  --store-dir="$PNPM_STORE_DIR"
+
 echo ""
 echo "✅ 依赖安装完成"
 echo ""
@@ -58,6 +81,14 @@ echo "======================================"
 pnpm build
 echo ""
 echo "✅ 构建完成"
+echo ""
+
+# 清理不必要的文件以节省空间
+echo "🧹 清理构建缓存..."
+rm -rf /tmp/.pnpm-store 2>/dev/null || true
+rm -rf node_modules/.cache 2>/dev/null || true
+pnpm store prune || true
+echo "✅ 清理完成"
 echo ""
 
 # 3. 启动生产服务器
