@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: 'Invoices',
 };
 
-async function SuspensePage(props: {
+export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
     page?: string;
@@ -43,18 +43,5 @@ async function SuspensePage(props: {
         </Suspense>
       </div>
     </div>
-  );
-}
-
-export default async function Page(props: {
-  searchParams?: Promise<{
-    query?: string;
-    page?: string;
-  }>;
-}) {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SuspensePage searchParams={props.searchParams} />
-    </Suspense>
   );
 }
