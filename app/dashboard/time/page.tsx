@@ -4,7 +4,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 export default async function Page() {
   'use cache';
-  cacheLife('minutes');
+  cacheLife({ stale: 5, revalidate : 10, expire: 600 });
   cacheTag('currentTime');
   const currentTime = await getCurrentTime();
   return (
