@@ -73,7 +73,7 @@ export async function fetchLatestInvoices() {
 }
 
 export async function fetchCardData() {
-  'use cache';
+  'use cache: remote';
   cacheLife('minutes');
   cacheTag('cards');
   try {
